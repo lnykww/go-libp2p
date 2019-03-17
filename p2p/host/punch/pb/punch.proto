@@ -1,0 +1,9 @@
+syntax = "proto2";
+
+package punch.pb;
+
+message Punch {
+    optional string version=1;
+    repeated string addresses=2;
+    optional int32 natStatus=3;
+ }

@@ -75,7 +75,7 @@ func NewAutoRelayHost(ctx context.Context, bhost *basic.BasicHost, discover disc
 func (h *AutoRelayHost) hostAddrs(addrs []ma.Multiaddr) []ma.Multiaddr {
 	h.mx.Lock()
 	defer h.mx.Unlock()
-	if h.addrs != nil && h.autonat.Status() == autonat.NATStatusPrivate {
+	if h.addrs != nil && h.AutoNat().Status() == autonat.NATStatusPrivate {
 		return h.addrs
 	} else {
 		return filterUnspecificRelay(h.addrsF(addrs))
@@ -95,7 +95,7 @@ func (h *AutoRelayHost) background(ctx context.Context) {
 
 	for {
 		wait := autonat.AutoNATRefreshInterval
-		switch h.autonat.Status() {
+		switch h.AutoNat().Status() {
 		case autonat.NATStatusUnknown:
 			wait = autonat.AutoNATRetryInterval
 		case autonat.NATStatusPublic:

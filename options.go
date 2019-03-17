@@ -229,6 +229,14 @@ func EnableAutoRelay() Option {
 	}
 }
 
+// EnablePunch configures libp2p to enbale hole punch
+func EnablePunch() Option {
+	return func(cfg *Config) error {
+		cfg.EnablePunch = true
+		return nil
+	}
+}
+
 // FilterAddresses configures libp2p to never dial nor accept connections from
 // the given addresses.
 func FilterAddresses(addrs ...*net.IPNet) Option {
