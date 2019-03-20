@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	bhost "github.com/libp2p/go-libp2p/p2p/host/basic"
+	"github.com/libp2p/go-libp2p/p2p/host/punch"
 	relay "github.com/libp2p/go-libp2p/p2p/host/relay"
 	routed "github.com/libp2p/go-libp2p/p2p/host/routed"
 
@@ -68,6 +69,7 @@ type Config struct {
 	Routing RoutingC
 
 	EnableAutoRelay bool
+	EnablePunch     bool
 }
 
 // NewNode constructs a new libp2p Host from the Config.
@@ -166,6 +168,14 @@ func (cfg *Config) NewNode(ctx context.Context) (host.Host, error) {
 	if err := h.Network().Listen(cfg.ListenAddrs...); err != nil {
 		h.Close()
 		return nil, err
+	}
+
+	if cfg.EnablePunch {
+		_, err = punch.NewPunch(h.(*bhost.BasicHost))
+		if err != nil {
+			h.Close()
+			return nil, err
+		}
 	}
 
 	// Configure routing and autorelay

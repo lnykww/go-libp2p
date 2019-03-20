@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
+	autonat "github.com/libp2p/go-libp2p-autonat"
 	basic "github.com/libp2p/go-libp2p/p2p/host/basic"
 
-	autonat "github.com/libp2p/go-libp2p-autonat"
 	_ "github.com/libp2p/go-libp2p-circuit"
 	discovery "github.com/libp2p/go-libp2p-discovery"
 	host "github.com/libp2p/go-libp2p-host"
@@ -46,7 +46,6 @@ type AutoRelayHost struct {
 	*basic.BasicHost
 	discover discovery.Discoverer
 	router   routing.PeerRouting
-	autonat  autonat.AutoNAT
 	addrsF   basic.AddrsFactory
 
 	disconnect chan struct{}
@@ -65,7 +64,6 @@ func NewAutoRelayHost(ctx context.Context, bhost *basic.BasicHost, discover disc
 		relays:     make(map[peer.ID]pstore.PeerInfo),
 		disconnect: make(chan struct{}, 1),
 	}
-	h.autonat = autonat.NewAutoNAT(ctx, bhost, h.baseAddrs)
 	bhost.AddrsFactory = h.hostAddrs
 	bhost.Network().Notify(h)
 	go h.background(ctx)
@@ -75,7 +73,7 @@ func NewAutoRelayHost(ctx context.Context, bhost *basic.BasicHost, discover disc
 func (h *AutoRelayHost) hostAddrs(addrs []ma.Multiaddr) []ma.Multiaddr {
 	h.mx.Lock()
 	defer h.mx.Unlock()
-	if h.addrs != nil && h.autonat.Status() == autonat.NATStatusPrivate {
+	if h.addrs != nil && h.AutoNat().Status() == autonat.NATStatusPrivate {
 		return h.addrs
 	} else {
 		return filterUnspecificRelay(h.addrsF(addrs))
@@ -95,7 +93,7 @@ func (h *AutoRelayHost) background(ctx context.Context) {
 
 	for {
 		wait := autonat.AutoNATRefreshInterval
-		switch h.autonat.Status() {
+		switch h.AutoNat().Status() {
 		case autonat.NATStatusUnknown:
 			wait = autonat.AutoNATRetryInterval
 		case autonat.NATStatusPublic:

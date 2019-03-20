@@ -9,6 +9,7 @@ import (
 	logging "github.com/ipfs/go-log"
 	goprocess "github.com/jbenet/goprocess"
 	goprocessctx "github.com/jbenet/goprocess/context"
+	autonat "github.com/libp2p/go-libp2p-autonat"
 	ifconnmgr "github.com/libp2p/go-libp2p-interface-connmgr"
 	inat "github.com/libp2p/go-libp2p-nat"
 	inet "github.com/libp2p/go-libp2p-net"
@@ -64,6 +65,7 @@ type BasicHost struct {
 	natmgr     NATManager
 	maResolver *madns.Resolver
 	cmgr       ifconnmgr.ConnManager
+	autonat    autonat.AutoNAT
 
 	AddrsFactory AddrsFactory
 
@@ -162,6 +164,8 @@ func NewHost(ctx context.Context, net inet.Network, opts *HostOpts) (*BasicHost,
 		h.pings = ping.NewPingService(h)
 	}
 
+	h.autonat = autonat.NewAutoNAT(ctx, h, h.Addrs)
+
 	net.SetConnHandler(h.newConnHandler)
 	net.SetStreamHandler(h.newStreamHandler)
 	return h, nil
@@ -258,6 +262,11 @@ func (h *BasicHost) newStreamHandler(s inet.Stream) {
 	log.Debugf("protocol negotiation took %s", took)
 
 	go handle(protoID, s)
+}
+
+// AutoNat return the autonat instance
+func (h *BasicHost) AutoNat() autonat.AutoNAT {
+	return h.autonat
 }
 
 // PushIdentify pushes an identify update through the identify push protocol
